@@ -18,7 +18,6 @@ colnames(data) = c("age",
 "industry code", 
 "occupation code", 
 "education", 
-"delete1",
 "enrolled in edu inst last wk ", 
 "marital status ",
 "major industry code", 
@@ -53,7 +52,10 @@ colnames(data) = c("age",
 "unknown2",
 "total person income?", 
 "own business or self employed? ", 
+"unknown3",
 "taxable income amount? ")
+
+data$delete1 <- NULL
 str(data)
 col
 ```
