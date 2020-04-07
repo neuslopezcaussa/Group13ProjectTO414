@@ -12,16 +12,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 data <- read.csv("census.csv")
-#we need to rename the columns - there is a hint below but it does not match the columns right 
+# I updated it so it makes more sense, but still the columns in the end dont make sense and I dont know what they represent 
 colnames(data) = c("age",
 "class of worker", 
 "industry code", 
 "occupation code", 
-"adjusted gross income", 
 "education", 
-"wage per hour", 
+"delete1",
 "enrolled in edu inst last wk ", 
-"marital status ", 
+"marital status ",
 "major industry code", 
 "major occupation code", 
 "race ", 
@@ -33,7 +32,6 @@ colnames(data) = c("age",
 "capital gains ", 
 "capital losses ", 
 "divdends from stocks ", 
-"federal income tax liability ", 
 "tax filer status ", 
 "region of previous residence ", 
 "state of previous residence ", 
@@ -45,16 +43,17 @@ colnames(data) = c("age",
 "migration code-move within reg ", 
 "live in this house 1 year ago ", 
 "migration prev res in sunbelt", 
-"num persons worked for employer ", 
+"num persons worked for employer ",
 "family members under 18 ", 
-"total person earnings ", 
 "country of birth father ", 
 "country of birth mother ", 
 "country of birth self ", 
 "citizenship ", 
-"total person income", 
-"own business or self employed ", 
-"taxable income amount ")
+"unknown1",
+"unknown2",
+"total person income?", 
+"own business or self employed? ", 
+"taxable income amount? ")
 str(data)
 col
 ```
