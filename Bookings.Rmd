@@ -1,0 +1,69 @@
+---
+title: "Untitled"
+author: "Jan Láža"
+date: "4/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Let's import and understand the data
+```{r}
+bookings <- read.csv("bookings.csv")
+str(bookings)
+summary(bookings)
+
+## This dataset is extracted from a hotel group and it explains its bookings and its characteristics. The main goal of this analysis is to optimize the reservations by predicting when the reservation will be canceled. This dataset consists of 32 variables that include integers and factors.
+
+```
+
+## 2. Data cleaning
+```{r}
+## Solving NAs:
+bookings$children <- ifelse(is.na(bookings$children),0,bookings$children)
+
+## Splitting data into training and test sets for speed and prediction
+library(caTools)
+set.seed(123)
+split <- sample.split(bookings$is_canceled, SplitRatio = 0.3)
+training_set <- subset(bookings, split == TRUE)
+test_set <- subset(bookings, split == FALSE)
+
+## We see that the variable country is a factor with +100 levels. According to the glm, its impact to the variable that we are analizing is low. Should we not include it in the model?
+
+model.country <- glm(is_canceled ~ country, family = binomial, data = training_set)
+summary(model.country)
+
+#bookings$babies <- as.factor(bookings$babies) factor with ONE LEVEL, with/without babies
+bookings$children <- as.factor(bookings$children)
+bookings$meal <- as.factor(bookings$meal)
+
+
+
+
+```
+
+```{r}
+summary(bookings$babies)
+```
+
+
+## 3. Building the model
+```{r}
+## We will analyze the variable is_canceled. To do so we will do it by using a glm.
+
+### We can see that there are two different types of variables. First, we will analyze the ones that are related to the person itself:
+model1 <- glm(is_canceled ~ adults + children + babies + market_segment + distribution_channel + is_repeated_guest + previous_cancellations + previous_bookings_not_canceled + customer_type, family = binomial, data = training_set)
+summary(model1)
+
+### Secondly, we will analyze the impact of the variables related to the reservation:
+model2 <- glm(is_canceled ~ lead_time + arrival_date_week_number + stays_in_weekend_nights + stays_in_week_nights + meal  + reserved_room_type + assigned_room_type + booking_changes + deposit_type + agent + company + days_in_waiting_list + required_car_parking_spaces + total_of_special_requests, family = binomial, data = training_set)
+summary(model2)
+
+model3 <- lm(booking_changes ~  arrival_date_month+lead_time+adults+ children+babies+meal+distribution_channel+reserved_room_type+customer_type, data = training_set)
+summary(model3)
+
+```
+
