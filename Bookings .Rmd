@@ -14,4 +14,18 @@ bookings <- read.csv("bookings.csv")
 str(bookings)
 summary(bookings)
 ```
+```{r}
+model1 <- lm(is_canceled ~ lead_time+ adults+ children+ babies + distribution_channel+is_repeated_guest+previous_cancellations+deposit_type, data = bookings   )
+summary(model1)
+
+bookings$babies <- as.factor(bookings$babies)
+bookings$children <- as.factor(bookings$children)
+bookings$children <- as.factor(bookings$children)
+bookings$meal <- as.factor(bookings$meal)
+bookings$meal <- as.factor(bookings$meal)
+bookings$meal <- as.factor(bookings$meal)
+
+model2 <- lm(booking_changes ~  arrival_date_month+lead_time+adults+ children+babies+meal+distribution_channel+reserved_room_type+customer_type, data = bookings)
+summary(model2)
+```
 
