@@ -21,9 +21,25 @@ summary(bookings)
 
 ## 2. Data cleaning
 ```{r}
-## Solving NAs:
+# Solving NAs:
 bookings$children <- ifelse(is.na(bookings$children),0,bookings$children)
 
+# Simplyfing the dataset:
+## 1. There are 334 levels for the variable agent. We will keep only the top 5 levels.
+bookings$agent <- as.character(bookings$agent)
+bookings$agent.s <- ifelse(bookings$agent == "9", "9", ifelse(bookings$agent == "240", "240", ifelse(bookings$agent == "NULL", "NULL", ifelse(bookings$agent == "1", "1", ifelse(bookings$agent == "14", "14", "Others")))))
+bookings$agent.s <- as.factor(bookings$agent.s)
+
+## 2. There are 353 levels for the variable company. We will keep only the top levels. NULL, 40, 223, 67, 45
+bookings$company <- as.character(bookings$company)
+bookings$company.s <- ifelse(bookings$company == "NULL", "NULL", ifelse(bookings$company == "40", "40", ifelse(bookings$company == "223", "223", ifelse(bookings$company == "67", "67", ifelse(bookings$company == "45", "45", "Others")))))
+bookings$company.s <- as.factor(bookings$company.s)
+
+## 3. There are 178 levels for the variable country. We will group them by region. 
+
+## 4. Turning the variables children and babys to a 0/1 if they have or not
+
+                          
 ## Splitting data into training and test sets for speed and prediction
 library(caTools)
 set.seed(123)
@@ -31,24 +47,14 @@ split <- sample.split(bookings$is_canceled, SplitRatio = 0.3)
 training_set <- subset(bookings, split == TRUE)
 test_set <- subset(bookings, split == FALSE)
 
-## We see that the variable country is a factor with +100 levels. According to the glm, its impact to the variable that we are analizing is low. Should we not include it in the model?
-
-model.country <- glm(is_canceled ~ country, family = binomial, data = training_set)
-summary(model.country)
 
 #bookings$babies <- as.factor(bookings$babies) factor with ONE LEVEL, with/without babies
-bookings$children <- as.factor(bookings$children)
-bookings$meal <- as.factor(bookings$meal)
+
 
 
 
 
 ```
-
-```{r}
-summary(bookings$babies)
-```
-
 
 ## 3. Building the model
 ```{r}
