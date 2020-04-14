@@ -35,10 +35,33 @@ bookings$company <- as.character(bookings$company)
 bookings$company.s <- ifelse(bookings$company == "NULL", "NULL", ifelse(bookings$company == "40", "40", ifelse(bookings$company == "223", "223", ifelse(bookings$company == "67", "67", ifelse(bookings$company == "45", "45", "Others")))))
 bookings$company.s <- as.factor(bookings$company.s)
 
-## 3. There are 178 levels for the variable country. We will group them by region. 
 
+## 3. There are 178 levels for the variable country. We will group them by region.
+
+#most of the tourist come from Europe so we decided to focus on Europe 
+levels(bookings$country) <- list( Southern_Europe= c("PRT","ESP","ITA"), Western_Europe =  c("GBR " , "IRL",  "FRA " ,  "CHE" , "BEL" ,  "NLD",  "LUX"), Cental_Europe = c("DEU",  "AUT" , "POL" ,  "HUN" , "CZE"), Northern_Europe = c("FIN" , "DNK", "SWE","NOR" ), Eastern_Europe= c("ROU","EST", "LTU","BGR", "UKR"), Eastern_Asia = c("CN", "CHN", "JPN", "KOR", "THA", "TWN","HKG "), Middle_East =c("ISR", "EGY", "JOR", "QAT", "OMN"), North_America = ("USA"), South_America =c("BRA","ARG","MEX", "URY" ))
+
+
+#bookings$country <- ifelse(is.na(bookings$country),"Rest of the World",bookings$country)
+#levels(bookings$country) = list(Southern_Europe = "1" ,Western_Europe ="2", Northern_Europe="3", Cental_Europe ="4", Eastern_Europe="5", Eastern_Asia="6",  Middle_East ="7", North_America ="8", South_America ="9", Rest_of_the_World=" Rest of the World")
+
+
+summary(bookings$country)
+                                                                                                                                                          
 ## 4. Turning the variables children and babys to a 0/1 if they have or not
+#babies
+bookings$babies <- as.character(bookings$babies)
+bookings$babies.s <- ifelse(bookings$babies == "0", "No", "Yes")
+bookings$babies.s <- as.factor(bookings$babies.s)
 
+#children
+bookings$children <- as.character(bookings$children)
+bookings$children.s <- ifelse(bookings$children == "0", "No", "Yes")
+bookings$children.s <- as.factor(bookings$children.s)
+
+#delete columns that have been replaced 
+bookings$children <- NULL
+bookings$babies <- NULL
                           
 ## Splitting data into training and test sets for speed and prediction
 library(caTools)
