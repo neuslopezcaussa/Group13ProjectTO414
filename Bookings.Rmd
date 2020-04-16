@@ -12,84 +12,65 @@ knitr::opts_chunk$set(echo = TRUE)
 ## 1. Let's import and understand the data
 ```{r}
 bookings <- read.csv("bookings.csv")
+summary(bookings)
+str(bookings)
 ## This dataset is extracted from a hotel group and it explains its bookings and its characteristics. The main goal of this analysis is to optimize the reservations by predicting when the reservation will be canceled. This dataset consists of 32 variables that include integers and factors.
 
 ```
 
 ## 2. Data cleaning
 ```{r}
-# Solving NAs:
+# 1. Solving NAs:
 bookings$children <- ifelse(is.na(bookings$children),0,bookings$children)
 
-# Simplyfing the dataset:
-## 1. There are 334 levels for the variable agent. We will keep only the top 5 levels.
+# 2. Simplyfing the dataset:
+## A. There are 334 levels for the variable agent. We will keep only the top 5 levels.
 bookings$agent <- as.character(bookings$agent)
 bookings$agent.s <- ifelse(bookings$agent == "9", "9", ifelse(bookings$agent == "240", "240", ifelse(bookings$agent == "NULL", "NULL", ifelse(bookings$agent == "1", "1", ifelse(bookings$agent == "14", "14", "Others")))))
 bookings$agent.s <- as.factor(bookings$agent.s)
 
-## 2. There are 353 levels for the variable company. We will keep only the top levels. NULL, 40, 223, 67, 45
+## B. There are 353 levels for the variable company. We will keep only the top levels. NULL, 40, 223, 67, 45
 bookings$company <- as.character(bookings$company)
 bookings$company.s <- ifelse(bookings$company == "NULL", "NULL", ifelse(bookings$company == "40", "40", ifelse(bookings$company == "223", "223", ifelse(bookings$company == "67", "67", ifelse(bookings$company == "45", "45", "Others")))))
 bookings$company.s <- as.factor(bookings$company.s)
 
 
-## 3. There are 178 levels for the variable country. We will group them by region.
-
-#most of the tourist come from Europe so we decided to focus on Europe 
+## C. There are 178 levels for the variable country. We will group them by region.
+# Note: most of the tourist come from Europe so we decided to focus on Europe 
 levels(bookings$country) <- list( Southern_Europe= c("PRT","ESP","ITA"), Western_Europe =  c("GBR " , "IRL",  "FRA " ,  "CHE" , "BEL" ,  "NLD",  "LUX"), Cental_Europe = c("DEU",  "AUT" , "POL" ,  "HUN" , "CZE"), Northern_Europe = c("FIN" , "DNK", "SWE","NOR" ), Eastern_Europe= c("ROU","EST", "LTU","BGR", "UKR"), Eastern_Asia = c("CN", "CHN", "JPN", "KOR", "THA", "TWN","HKG "), Middle_East =c("ISR", "EGY", "JOR", "QAT", "OMN"), North_America = ("USA"), South_America =c("BRA","ARG","MEX", "URY" ))
 
+bookings$country <- as.character(bookings$country)
+bookings$country <- ifelse(is.na(bookings$country),"Rest of the World",bookings$country)
+bookings$country <- as.factor(bookings$country)
 
-#bookings$country <- ifelse(is.na(bookings$country),"Rest of the World",bookings$country)
-#levels(bookings$country) = list(Southern_Europe = "1" ,Western_Europe ="2", Northern_Europe="3", Cental_Europe ="4", Eastern_Europe="5", Eastern_Asia="6",  Middle_East ="7", North_America ="8", South_America ="9", Rest_of_the_World=" Rest of the World")
 
-## 4. Groupign leading times into months 
+## D. Groupign leading times into months 
+bookings$lead_time<-ifelse(bookings$lead_time <= 31,"One Months", ifelse(bookings$lead_time > 31 & bookings$lead_time <= 62,"Two months", ifelse(bookings$lead_time > 62 & bookings$lead_time <= 93,"Three months", ifelse(bookings$lead_time > 93 & bookings$lead_time <= 124,"Four months", ifelse(bookings$lead_time > 124 & bookings$lead_time <= 155,"Five Months", ifelse(bookings$lead_time > 155 & bookings$lead_time <= 181, "Six weeks", "More than 6 months"))))))
 
-bookings$lead_time<-ifelse(bookings$lead_time <=31,"One Months",
-                                     ifelse(bookings$lead_time>31 & bookings$lead_time<=62,"Two months",
-                                      ifelse(bookings$lead_time>62 & bookings$lead_time<=93,"Three months",
-                                             ifelse(bookings$lead_time>93 & bookings$lead_time<=124,"Four months",
-                                                     ifelse(bookings$lead_time>124 & bookings$lead_time<=155,"Five Months", 
-                                                             ifelse(bookings$lead_time>155 & bookings$lead_time<=181, "Six weeks", "More than 6 months"))))))
 bookings$lead_time <- as.factor(bookings$lead_time)
 
-## 5. Grouping number of week nights 
+## E. Grouping number of week nights 
+bookings$stays_in_week_nights <-ifelse(bookings$stays_in_week_nights <= 0,"0", ifelse(bookings$stays_in_week_nights > 0 & bookings$stays_in_week_nights <= 1,"1", ifelse(bookings$stays_in_week_nights > 1 & bookings$stays_in_week_nights <= 2, "2", ifelse(bookings$stays_in_week_nights > 2 & bookings$stays_in_week_nights <= 3,"3", ifelse(bookings$stays_in_week_nights > 3 & bookings$stays_in_week_nights <= 4,"4", ifelse(bookings$stays_in_week_nights > 4 & bookings$stays_in_week_nights <= 5, "5", ifelse(bookings$stays_in_week_nights > 5 & bookings$stays_in_week_nights <= 6, "6", ifelse(bookings$stays_in_week_nights > 6 & bookings$stays_in_week_nights <= 7, "7", ifelse(bookings$stays_in_week_nights > 7 & bookings$stays_in_week_nights <= 8, "8", ifelse(bookings$stays_in_week_nights > 8 & bookings$stays_in_week_nights <= 9, "9", ifelse(bookings$stays_in_week_nights > 9 & bookings$stays_in_week_nights <= 10, "10", "More than 10 nights")))))))))))
 
-bookings$stays_in_week_nights <-ifelse(bookings$stays_in_week_nights <=0,"0",
-                                     ifelse(bookings$stays_in_week_nights>0 & bookings$stays_in_week_nights<=1,"2",
-                                      ifelse(bookings$stays_in_week_nights>1 & bookings$stays_in_week_nights<=2,"3",
-                                             ifelse(bookings$stays_in_week_nights>2 & bookings$stays_in_week_nights<=3,"4",
-                                                     ifelse(bookings$stays_in_week_nights>3 & bookings$stays_in_week_nights<=4,"5", 
-                                                             ifelse(bookings$stays_in_week_nights>4 & bookings$stays_in_week_nights<=5, "6",
-                                                                    ifelse(bookings$stays_in_week_nights>5 & bookings$stays_in_week_nights<=6, "7",
-                                                                           ifelse(bookings$stays_in_week_nights>6 & bookings$stays_in_week_nights<=7, "8",
-                                                                                  ifelse(bookings$stays_in_week_nights>7 & bookings$stays_in_week_nights<=8, "8",
-                                                                                         ifelse(bookings$stays_in_week_nights>8 & bookings$stays_in_week_nights<=9, " 9",
-                                                                                                ifelse(bookings$stays_in_week_nights>9 & bookings$stays_in_week_nights<=10, "10", "More than 10 nights")))))))))))
 bookings$stays_in_week_nights <- as.factor(bookings$stays_in_week_nights)
 
-## 6. Grouping number of weekend nights 
-
-bookings$stays_in_weekend_nights <-ifelse(bookings$stays_in_weekend_nights <=0,"0",
-                                     ifelse(bookings$stays_in_weekend_nights>0 & bookings$stays_in_weekend_nights<=1,"1",
-                                      ifelse(bookings$stays_in_weekend_nights>1 & bookings$stays_in_weekend_nights<=2,"2",
-                                             ifelse(bookings$stays_in_weekend_nights>2 & bookings$stays_in_weekend_nights<=3,"3",
-                                                     ifelse(bookings$stays_in_weekend_nights>3 & bookings$stays_in_weekend_nights<=4,"4", 
-                                                             ifelse(bookings$stays_in_weekend_nightss>4 &bookings$stays_in_weekend_nights<=5, "5 ", "More than 5 nights"))))))
+## F. Grouping number of weekend nights 
+bookings$stays_in_weekend_nights <-ifelse(bookings$stays_in_weekend_nights <=0,"0", ifelse(bookings$stays_in_weekend_nights > 0 & bookings$stays_in_weekend_nights <= 1,"1", ifelse(bookings$stays_in_weekend_nights > 1 & bookings$stays_in_weekend_nights <= 2,"2", ifelse(bookings$stays_in_weekend_nights > 2 & bookings$stays_in_weekend_nights <= 3,"3", ifelse(bookings$stays_in_weekend_nights > 3 & bookings$stays_in_weekend_nights <= 4,"4", ifelse(bookings$stays_in_weekend_nightss > 4 &bookings$stays_in_weekend_nights <= 5, "5 ", "More than 5 nights"))))))
 
 bookings$stays_in_weekend_nights <- as.factor(bookings$stays_in_weekend_nights)
 
-## 7. Grouping adults 
+## G. Grouping adults 
 
 bookings$adults <-ifelse(bookings$adults <=0,"0",
-                                     ifelse(bookings$adults>0 & bookings$adults<=1,"1",
-                                      ifelse(bookings$adults>1 & bookings$adults<=2,"2",
-                                             ifelse(bookings$adults>2 &bookings$adults<=3,"3",
-                                                     ifelse(bookings$adults>3 & bookings$adults<=4,"4", 
-                                                             ifelse(bookings$adults>4 &bookings$adults<=5, "5 ", "More than 5 adults"))))))
+                                     ifelse(bookings$adults > 0 & bookings$adults <= 1,"1",
+                                      ifelse(bookings$adults > 1 & bookings$adults <= 2,"2",
+                                             ifelse(bookings$adults > 2 &bookings$adults <= 3,"3",
+                                                     ifelse(bookings$adults > 3 & bookings$adults <= 4,"4", 
+                                                             ifelse(bookings$adults > 4 &bookings$adults <= 5, "5 ", "More than 5 adults"))))))
 
 bookings$adults <- as.factor(bookings$adults)
                                                                                                                                                           
-## 7. Turning the variables children and babys to a 0/1 if they have or not
+## H. Turning the variables children and babys to a 0/1 if they have or not
 #babies
 bookings$babies <- as.character(bookings$babies)
 bookings$babies.s <- ifelse(bookings$babies == "0", "No", "Yes")
@@ -100,11 +81,12 @@ bookings$children <- as.character(bookings$children)
 bookings$children.s <- ifelse(bookings$children == "0", "No", "Yes")
 bookings$children.s <- as.factor(bookings$children.s)
 
-#deleting columns that have been replaced 
+# 3. Column Elimination
+## A. Deleting columns that have been replaced 
 bookings$children <- NULL
 bookings$babies <- NULL
 
-#deleting unnecesary columns 
+## B. Deleting unnecesary columns 
 bookings$agent <- NULL
 bookings$company <- NULL
 bookings$adr <- NULL
@@ -117,170 +99,146 @@ bookings$arrival_date_week_number <- NULL
 bookings$arrival_date_month1 <- NULL
 bookings$reservation_status <- NULL 
 
-str(bookings)
+# 4. Making dummy variables as we have multiple factors
+bookings.dummy <- as.data.frame(model.matrix(~ . -1, bookings))
+str(bookings.dummy)
 ```
 
-# Preaparing data 
+# 3. Preaparing data 
 ```{r}
-#Randomazing 
+# 1. Randomaze the data:
 set.seed(65)
-bookings_random<-bookings[sample(nrow(bookings)),]
-bookings_r<-as.data.frame(model.matrix(~. -1,data=bookings_random))
+bookings.dummy <- bookings.dummy[sample(1:nrow(bookings.dummy)),]
 
-#Naming labels 
-bookings$is_canceled <- factor(bookings$is_canceled, levels = c("0", "1"), 
-                         labels = c("No", "Yes"))
-
-round(prop.table(table(bookings$is_canceled)) * 100, 1)
-
-#Normalizing 
-normalize <- function(x) {
-  return ((x - min(x)) / (max(x) - min(x)))
+# 2. Normalize the data:
+normalize <- function(x) { 
+  return((x - min(x)) / (max(x) - min(x)))
 }
-bookings_norm<-as.data.frame(lapply(bookings_r[1:34],normalize))
+bookings.dummy.n <- as.data.frame(sapply(bookings.dummy, normalize))
 
+# 3. Build train and test datasets:
+bookings_train <- bookings.dummy.n[1:95237,]
+bookings_test <- bookings.dummy.n[95238:119046,]
+
+bookings_train_labels <- bookings.dummy.n[1:95237,3]
+bookings_test_labels <- bookings.dummy.n[95238:119046,3]
+
+#3.1. Making sure they have a similar/logic distribution
+table(bookings_train_labels)
+table(bookings_test_labels)
 
 ```
 
 
 ```{r}
 ## Splitting data into training and test sets for speed and prediction
-library(caTools)
-set.seed(123)
-split <- sample.split(bookings_norm$is_canceled, SplitRatio = 0.3)
-training_set <- subset(bookings, split == TRUE)
-test_set <- subset(bookings, split == FALSE)
+#library(caTools)
+#set.seed(123)
+#split <- sample.split(bookings_norm$is_canceled, SplitRatio = 0.3)
+#training_set <- subset(bookings, split == TRUE)
+#test_set <- subset(bookings, split == FALSE)
 ```
 
+## 4. Exploring data 
+### Graph 1
 ```{r}
-str(bookings)
+# Exploring how many bookings are canceled and not  
+plot(as.factor(bookings$is_canceled), main="How often customers cancel their bookings?", ylab="Number of cancelations",  xlab= "Is cancled", ylim = c(0,90000), col=c("green", "red"), legend.text = "0 = No, 1 = Yes", width=20)
 ```
 
-## Exploring data 
-
-```{r}
-#Exploring how many bookings are canceled and not  
-bookings$is_canceled <- as.factor(bookings$is_canceled)
-plot(bookings$is_canceled, main="How often customers cancel their bookings?", ylab="Number of cancelations",  xlab= "Is cancled", ylim = c(0,90000), col=c("green", "red"), legend.text = "0 = No, 1 = Yes", width=20)
-```
-
-
+### Graph 2
 ```{r}
 #Exploring which month is the most popular for hotel visits
 plot(bookings$arrival_date_month, main="Which month is the most popular?", ylab="Number of reservation",  xlab= "Month", las=2, names.arg= c("January", "February", "March", "April", "May", "June", "July", "August", "September","October", "November", "December"), ylim=c(0,15000))
 ```
 
-
-
-
-## 3. Building the model
+## 5. Regression model
 ```{r}
 ## We will analyze the variable is_canceled. To do so we will do it by using a glm.
 
 ### We can see that there are two different types of variables. First, we will analyze the ones that are related to the person itself:
-model1 <- glm(is_canceled ~ adults + children.s + babies.s + market_segment + distribution_channel + is_repeated_guest + previous_cancellations + previous_bookings_not_canceled + customer_type, family = binomial, data = training_set)
+model1 <- glm(is_canceled ~ adults + children.s + babies.s + distribution_channel + is_repeated_guest + previous_cancellations + previous_bookings_not_canceled + customer_type, family = "binomial", data = bookings)
 summary(model1)
 
+## Revise the variables!!!
 ### Secondly, we will analyze the impact of the variables related to the reservation:
-model2 <- glm(is_canceled ~ lead_time + arrival_date_week_number + stays_in_weekend_nights + stays_in_week_nights + meal  + reserved_room_type + assigned_room_type + booking_changes + deposit_type + agent + company + days_in_waiting_list + required_car_parking_spaces + total_of_special_requests, family = binomial, data = training_set)
+#model1.2 <- glm(is_canceled ~ lead_time + arrival_date_week_number + stays_in_weekend_nights + stays_in_week_nights + meal  + reserved_room_type + assigned_room_type + booking_changes + deposit_type + agent + company + days_in_waiting_list + required_car_parking_spaces + total_of_special_requests, family = binomial, data = bookings)
 summary(model2)
 ```
 
-
-
-# Decision tree 
+# 6. KNN Model
 ```{r}
-library(C50)
-bookings_model <- C5.0(training_set[-2], training_set$is_canceled, trials = 10)
-
-# display simple facts about the tree
-bookings_model
-
-# display detailed information about the tree
-summary(bookings_model)
-
-# create a factor vector of predictions on test data
-bookings_pred <- predict(bookings_model, test_set)
-
-# cross tabulation of predicted versus actual classes
-library(gmodels)
-CrossTable(test_set$is_canceled, bookings_pred,
-           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
-           dnn = c('actual is_canceled', 'predicted is_cancled'))
-
-```
-
-## Ploting decision model 
-```{r}
-tree <- C5.0(is_canceled ~ ., data = bookings)
-plot(tree) #i dont know why but it does not plot 
-```
-
-## Neutral networks 
-```{r}
-library(neuralnet)
-bookings_model2 <- neuralnet(formula = is_canceled ~ .,
-                              data = training_set, hidden = 5) # doesn not work - might be because of the vectors, but i dont know 
-plot(bookings_model2)
-
-result <-neuralnet::compute(bookings_model2,test_set)
-predicted<-result$net.result
-
-model_results <- neuralnet::compute(bookings_model2,test_set)
-
-bin<-ifelse(predicted>0.062,1,0)
-
-#Seeing results
-library(caret)
-confusionMatrix(as.factor(bin),as.factor(test_set$is_canceled))
-summary(predicted)
-```
-
-# SVM - Vanilladot 
-```{r}
-library(kernlab)
-bookings_classifier <- ksvm(is_canceled ~ ., data = training_set,
-                          kernel = "vanilladot")
-bookings_classifier
-bookings_predictions <- predict(bookings_classifier, training_set) 
-head(bookings_predictions)
-table(bookings_predictions, training_set$is_canceled) #again does not work I think its because of the datasets - lenght should be specified 
-
-#Seeing results
-agreement<-bookings_predictions==training_set$is_canceled
-table(agreement)
-prop.table(table(agreement))
-```
-
-# SVM - Rbfdot 
-```{r}
-library(kernlab)
-bookings_classifier2 <- ksvm(is_canceled ~ ., data = training_set,
-                          kernel = "rbfdot")
-bookings_classifier2
-bookings_predictions2 <- predict(bookings_classifier2, training_set) 
-head(bookings_predictions2)
-table(bookings_predictions2, training_set$is_canceled) #again does not work I think its because of the datasets - lenght should be specified 
-
-#Seeing results
-agreement<-bookings_predictions2==training_set$is_canceled
-table(agreement)
-prop.table(table(agreement))
-```
-
-# KNN
-```{r}
+# 1. Building the Model:
 library(class)
-bookings_test_pred <- knn(train = training_set, test = test_set,
-                      cl = pokemon_train_labels, k=28)
-library(gmodels)
-CrossTable(x = pokemon_test_labels, y = pokemon_test_pred, 
-           prop.chisq=FALSE)
+## Note: we will use k= 345 as it is its square root.
+model2<- knn(train = bookings_train[ ,-2], test = bookings_test[ ,-2], cl = bookings_train_labels, k = 34)
 
-#Showing table 
+# 2. Model Evaluation:
 library(caret)
-confusionMatrix(pokemon_test_pred, pokemon_test_labels)
+confusionMatrix(as.factor(model2), as.factor(pokemon_test_labels))
 ```
 
+# 7. SVM Model
+```{r}
+# 1. Building the Model:
+library("e1071")
+library(kernlab)
+
+model3 <- ksvm(as.factor(is_canceled) ~ ., data = bookings_train, kernel = "vanilladot")
+summary(model3)
+
+# 2. Model Evaluation:
+bookings_predictors <- predict(model3, bookings_test)
+confusionMatrix(bookings_predictors, as.factor(bookings_test_labels))
+
+# 3. Model Improvement:
+## We will try different kernels in order to see which one has a higher accuracy.
+model3.2 <- ksvm(as.factor(is_canceled)~., data = bookings_train, kernel = "rbfdot")
+
+# 4. Model Evaluation:
+## By improving the model we can obtain a %.
+bookings_predictors2 <- predict(model3.2, bookings_test)
+confusionMatrix(bookings_predictors2, as.factor(bookings_test_labels))
+```
+
+# 8. ANN Model
+```{r}
+# 1. Building the Model:
+library(neuralnet)
+model4 <- neuralnet(formula = is_canceled ~., data = bookings_train, linear.output = FALSE)
+model4_results <- compute(model4, bookings_test[,-3])$net.result
+
+# 2. Model Evaluation:
+binary.is <- ifelse(model4_results > 0.4, 1, 0)
+confusionMatrix(as.factor(binary.is), as.factor(bookings_test$is_canceled))
+
+# 3. Model Improvement
+model4.2 <- neuralnet(formula = is_canceled ~., data = bookings_train, linear.output = FALSE, hidden = 4)
+model4.2_results <- compute(model4.2, bookings_test[,-3])$net.result
+
+# 4. Model Evaluation:
+binary.is2 <- ifelse(model4.2_results > 0.4, 1, 0)
+confusionMatrix(as.factor(binary.is2), as.factor(bookings_test$is_canceled))
+```
+
+# 9. Decisions Trees
+```{r}
+# 1. Building the model:
+library(C50)
+model5 <- C5.0(bookings_train[-3], as.factor(bookings_train$is_canceled))
+predict_m5 <- predict(model5, bookings_test)
+
+# 2. Model Evaluation:
+confusionMatrix(predict_m5, as.factor(bookings_test_labels))
+
+# 3. Improving the model:
+## We'll start by setting trails = 10, as it is suggested that it may reduce error rates about 25%. 
+model5.2 <- C5.0(bookings_train[-71], as.factor(bookings_train$is_canceled), trials = 10)
+predict_m5.2 <- predict(model5.2, canceled_test)
+
+# 4. Model Evaluation: 
+confusionMatrix(predict_m5.2, as.factor(bookings_test_labels))
+
+```
 
 
