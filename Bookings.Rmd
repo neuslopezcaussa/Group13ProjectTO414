@@ -54,7 +54,7 @@ bookings$lead_time <- as.factor(bookings$lead_time)
 
 ## 5. Grouping number of week nights 
 
-bookings$stays_in_week_nights <-ifelse(bookings$stays_in_week_nights <=0,"1",
+bookings$stays_in_week_nights <-ifelse(bookings$stays_in_week_nights <=0,"0",
                                      ifelse(bookings$stays_in_week_nights>0 & bookings$stays_in_week_nights<=1,"2",
                                       ifelse(bookings$stays_in_week_nights>1 & bookings$stays_in_week_nights<=2,"3",
                                              ifelse(bookings$stays_in_week_nights>2 & bookings$stays_in_week_nights<=3,"4",
@@ -115,6 +115,7 @@ bookings $arrival_date_year <- NULL
 bookings$arrival_date_day_of_month <- NULL
 bookings$arrival_date_week_number <- NULL
 bookings$arrival_date_month1 <- NULL
+bookings$reservation_status <- NULL 
 
 str(bookings)
 ```
@@ -140,8 +141,6 @@ bookings_norm<-as.data.frame(lapply(bookings_r[1:34],normalize))
 
 
 ```
-
-
 
 
 ```{r}
@@ -179,7 +178,7 @@ plot(bookings$arrival_date_month, main="Which month is the most popular?", ylab=
 ## We will analyze the variable is_canceled. To do so we will do it by using a glm.
 
 ### We can see that there are two different types of variables. First, we will analyze the ones that are related to the person itself:
-model1 <- glm(is_canceled ~ adults + children + babies + market_segment + distribution_channel + is_repeated_guest + previous_cancellations + previous_bookings_not_canceled + customer_type, family = binomial, data = training_set)
+model1 <- glm(is_canceled ~ adults + children.s + babies.s + market_segment + distribution_channel + is_repeated_guest + previous_cancellations + previous_bookings_not_canceled + customer_type, family = binomial, data = training_set)
 summary(model1)
 
 ### Secondly, we will analyze the impact of the variables related to the reservation:
@@ -187,8 +186,52 @@ model2 <- glm(is_canceled ~ lead_time + arrival_date_week_number + stays_in_week
 summary(model2)
 ```
 
-Decision tree 
+# Decision tree 
 ```{r}
+library(C50)
+bookings_model <- C5.0(training_set[-2], training_set$is_canceled, trials = 10)
 
+# display simple facts about the tree
+bookings_model
+
+# display detailed information about the tree
+summary(bookings_model)
+
+# create a factor vector of predictions on test data
+bookings_pred <- predict(bookings_model, test_set)
+
+# cross tabulation of predicted versus actual classes
+library(gmodels)
+CrossTable(test_set$is_canceled, bookings_pred,
+           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('actual is_canceled', 'predicted is_cancled'))
+
+```
+
+## Ploting decision model 
+```{r}
+tree <- C5.0(is_canceled ~ ., data = bookings)
+plot(tree) #i dont know why but it does not plot 
+```
+
+## Neutral networks 
+```{r}
+library(neuralnet)
+bookings_model2 <- neuralnet(formula = is_canceled ~ .,
+                              data = training_set, hidden = 5) # doesn not work - might be because of the vectors, but i dont know 
+plot(bookings_model2)
+
+result <-neuralnet::compute(bookings_model2,test_set)
+predicted<-result$net.result
+
+model_results <- neuralnet::compute(bookings_model2,test_set)
+
+#cor(predicted_strength, pokemon_test_2$is_legendary)
+bin<-ifelse(predicted>0.062,1,0)
+
+#Seeing results
+library(caret)
+confusionMatrix(as.factor(bin),as.factor(test_set$is_canceled))
+summary(predicted)
 ```
 
