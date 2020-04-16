@@ -186,6 +186,8 @@ model2 <- glm(is_canceled ~ lead_time + arrival_date_week_number + stays_in_week
 summary(model2)
 ```
 
+
+
 # Decision tree 
 ```{r}
 library(C50)
@@ -226,7 +228,6 @@ predicted<-result$net.result
 
 model_results <- neuralnet::compute(bookings_model2,test_set)
 
-#cor(predicted_strength, pokemon_test_2$is_legendary)
 bin<-ifelse(predicted>0.062,1,0)
 
 #Seeing results
@@ -234,4 +235,52 @@ library(caret)
 confusionMatrix(as.factor(bin),as.factor(test_set$is_canceled))
 summary(predicted)
 ```
+
+# SVM - Vanilladot 
+```{r}
+library(kernlab)
+bookings_classifier <- ksvm(is_canceled ~ ., data = training_set,
+                          kernel = "vanilladot")
+bookings_classifier
+bookings_predictions <- predict(bookings_classifier, training_set) 
+head(bookings_predictions)
+table(bookings_predictions, training_set$is_canceled) #again does not work I think its because of the datasets - lenght should be specified 
+
+#Seeing results
+agreement<-bookings_predictions==training_set$is_canceled
+table(agreement)
+prop.table(table(agreement))
+```
+
+# SVM - Rbfdot 
+```{r}
+library(kernlab)
+bookings_classifier2 <- ksvm(is_canceled ~ ., data = training_set,
+                          kernel = "rbfdot")
+bookings_classifier2
+bookings_predictions2 <- predict(bookings_classifier2, training_set) 
+head(bookings_predictions2)
+table(bookings_predictions2, training_set$is_canceled) #again does not work I think its because of the datasets - lenght should be specified 
+
+#Seeing results
+agreement<-bookings_predictions2==training_set$is_canceled
+table(agreement)
+prop.table(table(agreement))
+```
+
+# KNN
+```{r}
+library(class)
+bookings_test_pred <- knn(train = training_set, test = test_set,
+                      cl = pokemon_train_labels, k=28)
+library(gmodels)
+CrossTable(x = pokemon_test_labels, y = pokemon_test_pred, 
+           prop.chisq=FALSE)
+
+#Showing table 
+library(caret)
+confusionMatrix(pokemon_test_pred, pokemon_test_labels)
+```
+
+
 
