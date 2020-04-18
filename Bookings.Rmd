@@ -100,8 +100,12 @@ bookings$arrival_date_month1 <- NULL
 bookings$reservation_status <- NULL 
 
 # 4. Making dummy variables as we have multiple factors
-bookings.dummy <- as.data.frame(model.matrix(~ . -1, bookings))
-str(bookings.dummy)
+library(fastDummies)
+
+bookings.dummy <- dummy_cols(bookings, remove_first_dummy=TRUE)
+
+#bookings.dummy <- as.data.frame(model.matrix(~ . -1, bookings))
+#str(bookings.dummy)
 ```
 
 # 3. Preaparing data 
@@ -117,11 +121,22 @@ normalize <- function(x) {
 bookings.dummy.n <- as.data.frame(sapply(bookings.dummy, normalize))
 
 # 3. Build train and test datasets:
-bookings_train <- bookings.dummy.n[1:95237,]
-bookings_test <- bookings.dummy.n[95238:119046,]
 
-bookings_train_labels <- bookings.dummy.n[1:95237,3]
-bookings_test_labels <- bookings.dummy.n[95238:119046,3]
+library(caTools)
+set.seed(123)
+split <- sample.split(bookings$is_canceled, SplitRatio = 0.3)
+bookings_train <- subset(bookings, split == TRUE)
+bookings_test <- subset(bookings, split == FALSE)
+
+bookings_train_labels <- bookings_train[, 3]
+bookings_test_labels <- bookings_test[, 3]
+
+#bookings_train <- bookings.dummy.n[1:95237,]
+#bookings_test <- bookings.dummy.n[95238:119046,]
+
+#bookings_train_labels <- bookings.dummy.n[1:95237,3]
+#bookings_test_labels <- bookings.dummy.n[95238:119046,3]
+
 
 #3.1. Making sure they have a similar/logic distribution
 table(bookings_train_labels)
@@ -129,15 +144,6 @@ table(bookings_test_labels)
 
 ```
 
-
-```{r}
-## Splitting data into training and test sets for speed and prediction
-#library(caTools)
-#set.seed(123)
-#split <- sample.split(bookings_norm$is_canceled, SplitRatio = 0.3)
-#training_set <- subset(bookings, split == TRUE)
-#test_set <- subset(bookings, split == FALSE)
-```
 
 ## 4. Exploring data 
 ### Graph 1
