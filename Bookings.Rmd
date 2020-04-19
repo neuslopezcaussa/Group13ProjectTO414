@@ -24,6 +24,10 @@ str(bookings)
 # 1. Solving NAs:
 bookings$children <- ifelse(is.na(bookings$children),0,bookings$children)
 bookings$stays_in_weekend_nights <- ifelse(is.na(bookings$stays_in_weekend_nights),0,bookings$stays_in_weekend_nights)
+bookings$stays_in_week_nights <- ifelse(is.na(bookings$stays_in_week_nights),0,bookings$stays_in_week_nights)
+bookings$reserved_room_type <- ifelse(is.na(bookings$reserved_room_type),0,bookings$reserved_room_type)
+bookings$distribution_channel <- ifelse(is.na(bookings$distribution_channel),0,bookings$distribution_channel)
+
 
 
 # 2. Simplyfing the dataset:
@@ -53,7 +57,8 @@ bookings$lead_time<-ifelse(bookings$lead_time <= 31,"One Months", ifelse(booking
 bookings$lead_time <- as.factor(bookings$lead_time)
 
 ## E. Grouping number of week nights 
-bookings$stays_in_week_nights <-ifelse(bookings$stays_in_week_nights <= 0,"0", ifelse(bookings$stays_in_week_nights > 0 & bookings$stays_in_week_nights <= 1,"1", ifelse(bookings$stays_in_week_nights > 1 & bookings$stays_in_week_nights <= 2, "2", ifelse(bookings$stays_in_week_nights > 2 & bookings$stays_in_week_nights <= 3,"3", ifelse(bookings$stays_in_week_nights > 3 & bookings$stays_in_week_nights <= 4,"4", ifelse(bookings$stays_in_week_nights > 4 & bookings$stays_in_week_nights <= 5, "5", ifelse(bookings$stays_in_week_nights > 5 & bookings$stays_in_week_nights <= 6, "6", ifelse(bookings$stays_in_week_nights > 6 & bookings$stays_in_week_nights <= 7, "7", ifelse(bookings$stays_in_week_nights > 7 & bookings$stays_in_week_nights <= 8, "8", ifelse(bookings$stays_in_week_nights > 8 & bookings$stays_in_week_nights <= 9, "9", ifelse(bookings$stays_in_week_nights > 9 & bookings$stays_in_week_nights <= 10, "10", "More than 10 nights")))))))))))
+bookings$stays_in_week_nights <-ifelse(bookings$stays_in_week_nights <= 0,"0", ifelse(bookings$stays_in_week_nights > 0 & bookings$stays_in_week_nights <= 1,"1", ifelse(bookings$stays_in_week_nights > 1 & bookings$stays_in_week_nights <= 2, "2", ifelse(bookings$stays_in_week_nights > 2 & bookings$stays_in_week_nights <= 3,"3", ifelse(bookings$stays_in_week_nights > 3 & bookings$stays_in_week_nights <= 4,"4", ifelse(bookings$stays_in_week_nights > 4 & bookings$stays_in_week_nights <= 5, "5", ifelse(bookings$stays_in_week_nights > 5 & bookings$stays_in_week_nights <= 6, "6", ifelse(bookings$stays_in_week_nights > 6 & bookings$stays_in_week_nights <= 7, "7", ifelse(bookings$stays_in_week_nights > 7 & bookings$stays_in_week_nights <= 8, "8", ifelse(bookings$stays_in_week_nights > 8 & bookings$stays_in_week_nights <= 9, "9", "More than 9 nights"))))))))))
+table(bookings$stays_in_week_nights)
 
 bookings$stays_in_week_nights <- as.factor(bookings$stays_in_week_nights)
 
@@ -64,14 +69,17 @@ bookings$stays_in_weekend_nights <- as.factor(bookings$stays_in_weekend_nights)
 
 ## G. Grouping adults 
 
-bookings$adults <-ifelse(bookings$adults <=0,"0",
-                                     ifelse(bookings$adults > 0 & bookings$adults <= 1,"1",
-                                      ifelse(bookings$adults > 1 & bookings$adults <= 2,"2",
-                                             ifelse(bookings$adults > 2 &bookings$adults <= 3,"3",
-                                                     ifelse(bookings$adults > 3 & bookings$adults <= 4,"4", 
-                                                             ifelse(bookings$adults > 4 &bookings$adults <= 5, "5 ", "More than 5 adults"))))))
+#bookings$adults <- as.character(bookings$adults)
+#bookings$adults <-ifelse(bookings$adults <=0,"0",
+                                    # ifelse(bookings$adults > 0 & bookings$adults <= 1,"1",
+                                      #ifelse(bookings$adults > 1 & bookings$adults <= 2,"2",
+                                            # ifelse(bookings$adults > 2 &bookings$adults <= 3,"3",
+                                                     #ifelse(bookings$adults > 3 & bookings$adults <= 4,"4", 
+                                                            # ifelse(bookings$adults > 4 &bookings$adults <= 5, "5 ", "More than 5 adults"))))))
 
-bookings$adults <- as.factor(bookings$adults)
+#bookings$adults <- as.factor(bookings$adults)
+#str(bookings$adults)
+
                                                                                                                                                           
 ## H. Turning the variables children and babys to a 0/1 if they have or not
 #babies
@@ -101,6 +109,8 @@ bookings$arrival_date_day_of_month <- NULL
 bookings$arrival_date_week_number <- NULL
 bookings$arrival_date_month1 <- NULL
 bookings$reservation_status <- NULL 
+bookings$adults <- NULL
+summary(bookings$adults)
 
 # 4. Making dummy variables as we have multiple factors
 
@@ -114,13 +124,16 @@ bookings.dummy <- as.data.frame(model.matrix(~ . -1, bookings))
 set.seed(65)
 bookings.dummy <- bookings.dummy[sample(1:nrow(bookings.dummy)),]
 
-bookings.dummy <- bookings.dummy[1:80000,]
+bookings.dummy <- bookings.dummy[1:1000,] #instead of 80000
+
 
 # 2. Normalize the data:
 normalize <- function(x) { 
   return((x - min(x)) / (max(x) - min(x)))
 }
 bookings.dummy.n <- as.data.frame(sapply(bookings.dummy, normalize))
+
+bookings.dummy.n$stays_in_week_nights9 <- ifelse(is.na(bookings.dummy.n$stays_in_week_nights9),0,bookings.dummy.n$stays_in_week_nights9l)
 
 # 3. Build train and test datasets:
 
@@ -175,7 +188,9 @@ summary(model2)
 ```
 
 ```{r}
+
 sapply(bookings.dummy.n, function(x) sum(is.na(x)))
+
 ```
 
 
@@ -184,7 +199,7 @@ sapply(bookings.dummy.n, function(x) sum(is.na(x)))
 # 1. Building the Model:
 library(class)
 ## Note: we will use k= 34 as it is its square root.
-model2<- knn(train = bookings_train[ ,-2], test = bookings_test[ ,-2], cl = bookings_train_labels, k = 34)
+model2<- knn(train = bookings_train[ ,-3], test = bookings_test[ ,-3], cl = bookings_train_labels, k = 34)
 
 # 2. Model Evaluation:
 library(caret)
