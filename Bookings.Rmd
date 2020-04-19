@@ -199,7 +199,7 @@ sapply(bookings.dummy.n, function(x) sum(is.na(x)))
 # 1. Building the Model:
 library(class)
 ## Note: we will use k= 34 as it is its square root.
-model2<- knn(train = bookings_train[ ,-3], test = bookings_test[ ,-3], cl = bookings_train_labels, k = 34)
+model2 <- knn(train = bookings_train[ ,-3], test = bookings_test[ ,-3], cl = bookings_train_labels, k = 34)
 
 # 2. Model Evaluation:
 library(caret)
@@ -270,7 +270,23 @@ confusionMatrix(predict_m5.2, as.factor(bookings_test_labels))
 
 ```
 
+## 10. Model combination by voting
 ```{r}
+combined <- data.frame(model2, bookings_predictors2, binary.is2, predict_m5.2, bookings_test$is_canceled)
 
+#Converting all factors into numeric forms for voting analysis
+model2_f <- as.numeric(model2)
+bookings_predictors2_f <- as.numeric(bookings_predictors2)
+binary.is2_f <- as.numeric(binary.is2)
+predict_m5.2_f <- as.numeric(predict_m5.2)
+
+newcombined <- data.frame(model2_f, bookings_predictors2_f, binary.is2_f, predict_m5.2_f, bookings_test$is_canceled)
+
+newcombined$voting <- ifelse(model2_f + bookings_predictors2_f + binary.is2_f + predict_m5.2_f > 3, 1,0)
+newcombined$voting <- factor(newcombined$voting, levels = c(0,1), labels = c("no","yes"))
+newcombined$bookings_test.is_canceled <- factor(newcombined$bookings_test.is_canceled, levels = c(0,1), labels = c("no","yes"))
+
+agreement_all <- newcombined$voting == newcombined$bookings_test.is_canceled
+str(newcombined)
 ```
 
