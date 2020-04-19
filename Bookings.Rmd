@@ -191,7 +191,7 @@ summary(model2)
 ```
 
 ```{r}
-## DATA EXPLORATION BLOCK FOR TESTING, DO NOT INCLUDE IN FINAL RESULT
+## DATA CLEANING BLOCK FOR TESTING, DO NOT INCLUDE IN FINAL RESULT
 #sapply(bookings.dummy.n, function(x) sum(is.na(x)))
 library(janitor)
 
