@@ -18,10 +18,13 @@ str(bookings)
 
 ```
 
+
 ## 2. Data cleaning
 ```{r}
 # 1. Solving NAs:
 bookings$children <- ifelse(is.na(bookings$children),0,bookings$children)
+bookings$stays_in_weekend_nights <- ifelse(is.na(bookings$stays_in_weekend_nights),0,bookings$stays_in_weekend_nights)
+
 
 # 2. Simplyfing the dataset:
 ## A. There are 334 levels for the variable agent. We will keep only the top 5 levels.
@@ -37,7 +40,7 @@ bookings$company.s <- as.factor(bookings$company.s)
 
 ## C. There are 178 levels for the variable country. We will group them by region.
 # Note: most of the tourist come from Europe so we decided to focus on Europe 
-levels(bookings$country) <- list( Southern_Europe= c("PRT","ESP","ITA"), Western_Europe =  c("GBR " , "IRL",  "FRA " ,  "CHE" , "BEL" ,  "NLD",  "LUX"), Cental_Europe = c("DEU",  "AUT" , "POL" ,  "HUN" , "CZE"), Northern_Europe = c("FIN" , "DNK", "SWE","NOR" ), Eastern_Europe= c("ROU","EST", "LTU","BGR", "UKR"), Eastern_Asia = c("CN", "CHN", "JPN", "KOR", "THA", "TWN","HKG "), Middle_East =c("ISR", "EGY", "JOR", "QAT", "OMN"), North_America = ("USA"), South_America =c("BRA","ARG","MEX", "URY" ))
+levels(bookings$country) <- list( Southern_Europe= c("PRT","ESP","ITA"), Western_Europe =  c("GBR " , "IRL",  "FRA " ,  "CHE" , "BEL" ,  "NLD",  "LUX"), Cental_Europe = c("DEU",  "AUT" , "POL" ,  "HUN" , "CZE"), Northern_Europe = c("FIN" , "DNK", "SWE","NOR" ), Eastern_Europe= c("ROU","EST", "LTU","BGR", "UKR"), Eastern_Asia = c("CHN", "JPN", "KOR", "THA", "TWN","HKG "), Middle_East =c("ISR", "EGY", "JOR", "QAT", "OMN"), North_America = c("CN","MEX","USA"), South_America =c("BRA","ARG", "URY"))
 
 bookings$country <- as.character(bookings$country)
 bookings$country <- ifelse(is.na(bookings$country),"Rest of the World",bookings$country)
@@ -100,11 +103,8 @@ bookings$arrival_date_month1 <- NULL
 bookings$reservation_status <- NULL 
 
 # 4. Making dummy variables as we have multiple factors
-library(fastDummies)
 
-bookings.dummy <- dummy_cols(bookings, remove_first_dummy=TRUE)
-
-#bookings.dummy <- as.data.frame(model.matrix(~ . -1, bookings))
+bookings.dummy <- as.data.frame(model.matrix(~ . -1, bookings))
 #str(bookings.dummy)
 ```
 
@@ -113,6 +113,8 @@ bookings.dummy <- dummy_cols(bookings, remove_first_dummy=TRUE)
 # 1. Randomaze the data:
 set.seed(65)
 bookings.dummy <- bookings.dummy[sample(1:nrow(bookings.dummy)),]
+
+bookings.dummy <- bookings.dummy[1:80000,]
 
 # 2. Normalize the data:
 normalize <- function(x) { 
@@ -124,9 +126,9 @@ bookings.dummy.n <- as.data.frame(sapply(bookings.dummy, normalize))
 
 library(caTools)
 set.seed(123)
-split <- sample.split(bookings$is_canceled, SplitRatio = 0.3)
-bookings_train <- subset(bookings, split == TRUE)
-bookings_test <- subset(bookings, split == FALSE)
+split <- sample.split(bookings.dummy.n$is_canceled, SplitRatio = 0.7)
+bookings_train <- subset(bookings.dummy.n, split == TRUE)
+bookings_test <- subset(bookings.dummy.n, split == FALSE)
 
 bookings_train_labels <- bookings_train[, 3]
 bookings_test_labels <- bookings_test[, 3]
@@ -149,7 +151,7 @@ table(bookings_test_labels)
 ### Graph 1
 ```{r}
 # Exploring how many bookings are canceled and not  
-plot(as.factor(bookings$is_canceled), main="How often customers cancel their bookings?", ylab="Number of cancelations",  xlab= "Is cancled", ylim = c(0,90000), col=c("green", "red"), legend.text = "0 = No, 1 = Yes", width=20)
+plot(as.factor(bookings$is_canceled), main="How often customers cancel their bookings?", ylab="Number of cancelations",  xlab= "Is canceled", ylim = c(0,90000), col=c("green", "red"), legend.text = "0 = No, 1 = Yes", width=20)
 ```
 
 ### Graph 2
@@ -163,25 +165,30 @@ plot(bookings$arrival_date_month, main="Which month is the most popular?", ylab=
 ## We will analyze the variable is_canceled. To do so we will do it by using a glm.
 
 ### We can see that there are two different types of variables. First, we will analyze the ones that are related to the person itself:
-model1 <- glm(is_canceled ~ adults + children.s + babies.s + distribution_channel + is_repeated_guest + previous_cancellations + previous_bookings_not_canceled + customer_type, family = "binomial", data = bookings)
+model1 <- glm(is_canceled ~ adults + children.s + babies.s + distribution_channel + is_repeated_guest + previous_cancellations + previous_bookings_not_canceled + customer_type, family = "binomial", data = bookings_train)
 summary(model1)
 
 ## Revise the variables!!!
 ### Secondly, we will analyze the impact of the variables related to the reservation:
-#model1.2 <- glm(is_canceled ~ lead_time + arrival_date_week_number + stays_in_weekend_nights + stays_in_week_nights + meal  + reserved_room_type + assigned_room_type + booking_changes + deposit_type + agent + company + days_in_waiting_list + required_car_parking_spaces + total_of_special_requests, family = binomial, data = bookings)
+#model1.2 <- glm(is_canceled ~ lead_time + arrival_date_week_number + stays_in_weekend_nights + stays_in_week_nights + meal  + reserved_room_type + assigned_room_type + booking_changes + deposit_type + agent + company + days_in_waiting_list + required_car_parking_spaces + total_of_special_requests, family = binomial, data = bookings_train)
 summary(model2)
 ```
+
+```{r}
+sapply(bookings.dummy.n, function(x) sum(is.na(x)))
+```
+
 
 # 6. KNN Model
 ```{r}
 # 1. Building the Model:
 library(class)
-## Note: we will use k= 345 as it is its square root.
+## Note: we will use k= 34 as it is its square root.
 model2<- knn(train = bookings_train[ ,-2], test = bookings_test[ ,-2], cl = bookings_train_labels, k = 34)
 
 # 2. Model Evaluation:
 library(caret)
-confusionMatrix(as.factor(model2), as.factor(pokemon_test_labels))
+confusionMatrix(as.factor(model2), as.factor(bookings_test_labels))
 ```
 
 # 7. SVM Model
