@@ -97,20 +97,23 @@ bookings$children.s <- as.factor(bookings$children.s)
 bookings$children <- NULL
 bookings$babies <- NULL
 
-## B. Deleting unnecesary columns 
-bookings$agent <- NULL
-bookings$company <- NULL
-bookings$adr <- NULL
-bookings$reservation_status_date <- NULL
-bookings$assigned_room_type <- NULL
-bookings$market_segment <- NULL
-bookings $arrival_date_year <- NULL
-bookings$arrival_date_day_of_month <- NULL
-bookings$arrival_date_week_number <- NULL
-bookings$arrival_date_month1 <- NULL
-bookings$reservation_status <- NULL 
-bookings$adults <- NULL
-summary(bookings$adults)
+## B. Deleting unnecesary columns
+drops <- c("agent","company", "adr", "reservation_status_date", "assigned_room_type", "market_segment", "arrival_date_year", "arrival_date_day_of_month", "arrival_date_week_number", "arrival_date_month1", "reservation_status", "adults")
+bookings <- bookings[ , !(names(bookings) %in% drops)]
+
+#bookings$agent <- NULL
+#bookings$company <- NULL
+#bookings$adr <- NULL
+#bookings$reservation_status_date <- NULL
+#bookings$assigned_room_type <- NULL
+#bookings$market_segment <- NULL
+#bookings $arrival_date_year <- NULL
+#bookings$arrival_date_day_of_month <- NULL
+#bookings$arrival_date_week_number <- NULL
+#bookings$arrival_date_month1 <- NULL
+#bookings$reservation_status <- NULL 
+#bookings$adults <- NULL
+#summary(bookings$adults)
 
 # 4. Making dummy variables as we have multiple factors
 
@@ -133,7 +136,7 @@ normalize <- function(x) {
 }
 bookings.dummy.n <- as.data.frame(sapply(bookings.dummy, normalize))
 
-bookings.dummy.n$stays_in_week_nights9 <- ifelse(is.na(bookings.dummy.n$stays_in_week_nights9),0,bookings.dummy.n$stays_in_week_nights9l)
+bookings.dummy.n$stays_in_week_nights9 <- ifelse(is.na(bookings.dummy.n$stays_in_week_nights9),0,bookings.dummy.n$stays_in_week_nights9)
 
 # 3. Build train and test datasets:
 
@@ -188,9 +191,12 @@ summary(model2)
 ```
 
 ```{r}
+## DATA EXPLORATION BLOCK FOR TESTING, DO NOT INCLUDE IN FINAL RESULT
+#sapply(bookings.dummy.n, function(x) sum(is.na(x)))
+library(janitor)
 
-sapply(bookings.dummy.n, function(x) sum(is.na(x)))
-
+bookings_train <- clean_names(bookings_train)
+bookings_test <- clean_names(bookings_test)
 ```
 
 
