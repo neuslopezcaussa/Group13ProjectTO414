@@ -223,6 +223,7 @@ confusionMatrix(bookings_predictors, as.factor(bookings_test_labels))
 ## We will try different kernels in order to see which one has a higher accuracy.
 model3.2 <- ksvm(as.factor(is_canceled)~., data = bookings_train, kernel = "rbfdot")
 
+
 # 4. Model Evaluation:
 ## By improving the model we can obtain a %.
 bookings_predictors2 <- predict(model3.2, bookings_test)
@@ -262,11 +263,14 @@ confusionMatrix(predict_m5, as.factor(bookings_test_labels))
 # 3. Improving the model:
 ## We'll start by setting trails = 10, as it is suggested that it may reduce error rates about 25%. 
 model5.2 <- C5.0(bookings_train[-71], as.factor(bookings_train$is_canceled), trials = 10)
-predict_m5.2 <- predict(model5.2, canceled_test)
+predict_m5.2 <- predict(model5.2, bookings_test)
 
 # 4. Model Evaluation: 
 confusionMatrix(predict_m5.2, as.factor(bookings_test_labels))
 
 ```
 
+```{r}
+
+```
 
