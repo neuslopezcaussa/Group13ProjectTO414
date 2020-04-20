@@ -178,19 +178,7 @@ plot(bookings$arrival_date_month, main="Which month is the most popular?", ylab=
 
 ## 5. Regression model
 ```{r}
-## We will analyze the variable is_canceled. To do so we will do it by using a glm.
-
-### We can see that there are two different types of variables. First, we will analyze the ones that are related to the person itself:
-#model1 <- glm(is_canceled ~ adults + children.s + babies.s + distribution_channel + is_repeated_guest + previous_cancellations + #previous_bookings_not_canceled + customer_type, family = "binomial", data = bookings_train)
-#summary(model1)
-
-## Revise the variables!!!
-### Secondly, we will analyze the impact of the variables related to the reservation:
-#model1.2 <- glm(is_canceled ~ lead_time + arrival_date_week_number + stays_in_weekend_nights + stays_in_week_nights + meal  + reserved_room_type + assigned_room_type + booking_changes + deposit_type + agent + company + days_in_waiting_list + required_car_parking_spaces + total_of_special_requests, family = binomial, data = bookings_train)
-#summary(model2)
-```
-
-```{r}
+### Performing stepwise selection to isolate most relevant factors
 options(warn=-1)
 training.omit <- na.omit(bookings_train)
 
@@ -204,23 +192,23 @@ model.full = glm(is_canceled ~ .,
                  family = binomial(link="logit")
 )
 
-model2 = step(model.null,
+model1 = step(model.null,
      scope = list(upper=model.full),
      direction="both",
      test="Chisq",
      data=bookings_train,
      trace=FALSE)
 
-summary(model2)
-model2_pred = predict(model2, type = 'response', newdata = bookings_test[-3])
-y_pred = ifelse(model2_pred > 0.5, 1, 0)
-cm = table(bookings_test[, 3], y_pred > 0.5)
-cm
+summary(model1)
+library(caret)
+
+model1_pred = predict(model1, bookings_test)
+binary = ifelse(model1_pred > 0.5, 1, 0)
+confusionMatrix(as.factor(binary), as.factor(bookings_test_labels))
 ```
 
 ```{r}
-## DATA CLEANING BLOCK FOR TESTING, DO NOT INCLUDE IN FINAL RESULT
-#sapply(bookings.dummy.n, function(x) sum(is.na(x)))
+## Additional data cleaning
 library(janitor)
 
 bookings_train <- clean_names(bookings_train)
@@ -236,7 +224,6 @@ library(class)
 model2 <- knn(train = bookings_train[ ,-3], test = bookings_test[ ,-3], cl = bookings_train_labels, k = 34)
 
 # 2. Model Evaluation:
-library(caret)
 confusionMatrix(as.factor(model2), as.factor(bookings_test_labels))
 ```
 

@@ -657,17 +657,8 @@ plot(bookings$arrival_date_month, main=&quot;Which month is the most popular?&qu
 </div>
 <div id="regression-model" class="section level2">
 <h2>5. Regression model</h2>
-<pre class="r"><code>## We will analyze the variable is_canceled. To do so we will do it by using a glm.
-
-### We can see that there are two different types of variables. First, we will analyze the ones that are related to the person itself:
-#model1 &lt;- glm(is_canceled ~ adults + children.s + babies.s + distribution_channel + is_repeated_guest + previous_cancellations + #previous_bookings_not_canceled + customer_type, family = &quot;binomial&quot;, data = bookings_train)
-#summary(model1)
-
-## Revise the variables!!!
-### Secondly, we will analyze the impact of the variables related to the reservation:
-#model1.2 &lt;- glm(is_canceled ~ lead_time + arrival_date_week_number + stays_in_weekend_nights + stays_in_week_nights + meal  + reserved_room_type + assigned_room_type + booking_changes + deposit_type + agent + company + days_in_waiting_list + required_car_parking_spaces + total_of_special_requests, family = binomial, data = bookings_train)
-#summary(model2)</code></pre>
-<pre class="r"><code>options(warn=-1)
+<pre class="r"><code>### Performing stepwise selection to isolate most relevant factors
+options(warn=-1)
 training.omit &lt;- na.omit(bookings_train)
 
 model.null = glm(is_canceled ~ 1,
@@ -680,14 +671,14 @@ model.full = glm(is_canceled ~ .,
                  family = binomial(link=&quot;logit&quot;)
 )
 
-model2 = step(model.null,
+model1 = step(model.null,
      scope = list(upper=model.full),
      direction=&quot;both&quot;,
      test=&quot;Chisq&quot;,
      data=bookings_train,
      trace=FALSE)
 
-summary(model2)</code></pre>
+summary(model1)</code></pre>
 <pre><code>## 
 ## Call:
 ## glm(formula = is_canceled ~ `deposit_typeNon Refund` + required_car_parking_spaces + 
@@ -738,8 +729,40 @@ summary(model2)</code></pre>
 ## AIC: 590.11
 ## 
 ## Number of Fisher Scoring iterations: 17</code></pre>
-<pre class="r"><code>## DATA CLEANING BLOCK FOR TESTING, DO NOT INCLUDE IN FINAL RESULT
-#sapply(bookings.dummy.n, function(x) sum(is.na(x)))
+<pre class="r"><code>library(caret)</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>model1_pred = predict(model1, bookings_test)
+binary = ifelse(model1_pred &gt; 0.5, 1, 0)
+confusionMatrix(as.factor(binary), as.factor(bookings_test_labels))</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction   0   1
+##          0 181  51
+##          1   8  60
+##                                           
+##                Accuracy : 0.8033          
+##                  95% CI : (0.7538, 0.8468)
+##     No Information Rate : 0.63            
+##     P-Value [Acc &gt; NIR] : 5.571e-11       
+##                                           
+##                   Kappa : 0.5415          
+##                                           
+##  Mcnemar&#39;s Test P-Value : 4.553e-08       
+##                                           
+##             Sensitivity : 0.9577          
+##             Specificity : 0.5405          
+##          Pos Pred Value : 0.7802          
+##          Neg Pred Value : 0.8824          
+##              Prevalence : 0.6300          
+##          Detection Rate : 0.6033          
+##    Detection Prevalence : 0.7733          
+##       Balanced Accuracy : 0.7491          
+##                                           
+##        &#39;Positive&#39; Class : 0               
+## </code></pre>
+<pre class="r"><code>## Additional data cleaning
 library(janitor)</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;janitor&#39;</code></pre>
@@ -758,10 +781,7 @@ library(class)
 model2 &lt;- knn(train = bookings_train[ ,-3], test = bookings_test[ ,-3], cl = bookings_train_labels, k = 34)
 
 # 2. Model Evaluation:
-library(caret)</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
-<pre><code>## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>confusionMatrix(as.factor(model2), as.factor(bookings_test_labels))</code></pre>
+confusionMatrix(as.factor(model2), as.factor(bookings_test_labels))</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
