@@ -100,7 +100,6 @@ bookings.dummy <- bookings.dummy[sample(1:nrow(bookings.dummy)),]
 
 bookings.dummy <- bookings.dummy[1:1000,]
 
-
 # 2. Normalize the data:
 normalize <- function(x) { 
   return((x - min(x)) / (max(x) - min(x)))
@@ -110,7 +109,6 @@ bookings.dummy.n <- as.data.frame(sapply(bookings.dummy, normalize))
 bookings.dummy.n$stays_in_week_nights9 <- ifelse(is.na(bookings.dummy.n$stays_in_week_nights9),0,bookings.dummy.n$stays_in_week_nights9)
 
 # 3. Build train and test datasets:
-
 library(caTools)
 set.seed(123)
 split <- sample.split(bookings.dummy.n$is_canceled, SplitRatio = 0.7)
@@ -119,7 +117,6 @@ bookings_test <- subset(bookings.dummy.n, split == FALSE)
 
 bookings_train_labels <- bookings_train[, 3]
 bookings_test_labels <- bookings_test[, 3]
-
 
 # 3.1. Making sure they have a similar/logic distribution
 table(bookings_train_labels)
@@ -227,13 +224,13 @@ library(class)
 model2 <- knn(train = bookings_train[ ,-3], test = bookings_test[ ,-3], cl = bookings_train_labels, k = 35)
 
 # 2. Model Evaluation
-## With the KNN Model we obtain an accuracy of 76.67%
+## With the KNN Model we obtain an accuracy of 77%
 confusionMatrix(as.factor(model2), as.factor(bookings_test_labels))
 ```
 
 # 7. SVM Model
 ```{r}
-# 1. Building the Model:
+# 1. Building the Model: Kernel = Vanilladot
 library("e1071")
 library(kernlab)
 
@@ -245,14 +242,15 @@ bookings_predictors <- predict(model3, bookings_test)
 ## With the SVM Model we obtain an accuracy of 80.67%.
 confusionMatrix(bookings_predictors, as.factor(bookings_test_labels))
 
-# 3. Model Improvement:
 ## We will try different kernels in order to see which one has a higher accuracy.
+
+# 3. Building the Model: Kernel = polydot
+
 model3.2 <- ksvm(as.factor(is_canceled)~., data = bookings_train, kernel = "polydot")
 
-
 # 4. Model Evaluation:
-## By improving the model we can obtain a 80.67 accuracy%.
 bookings_predictors2 <- predict(model3.2, bookings_test)
+## With the SVM Model we obtain an accuracy of 80.67%.
 confusionMatrix(bookings_predictors2, as.factor(bookings_test_labels))
 ```
 
@@ -265,17 +263,17 @@ model4_results <- compute(model4, bookings_test[,-3])$net.result
 
 # 2. Model Evaluation:
 binary.is <- ifelse(model4_results > 0.35, 1, 0)
-## With the ANN Model we obtain an accuracy of 79.67%.
+## With the ANN Model we obtain an accuracy of 78.67%.
 confusionMatrix(as.factor(binary.is), as.factor(bookings_test$is_canceled))
 
-# 3. Model Improvement
+# 3. Model Improvement:
 model4.2 <- neuralnet(formula = is_canceled ~., data = bookings_train, linear.output = FALSE, hidden = 4)
 model4.2_results <- compute(model4.2, bookings_test[,-3])$net.result
 summary(model4.2_results)
 
 # 4. Model Evaluation:
 binary.is2 <- ifelse(model4.2_results > 0.35, 1, 0)
-## By improving the model we obtain a 74.67% accuracy.
+## By improving the model we obtain a 78.33% accuracy.
 confusionMatrix(as.factor(binary.is2), as.factor(bookings_test$is_canceled))
 ```
 
@@ -292,28 +290,27 @@ confusionMatrix(predict_m5, as.factor(bookings_test_labels))
 
 # 3. Improving the model:
 ## We'll start by setting trails = 10, as it is suggested that it may reduce error rates about 25%. 
-model5.2 <- C5.0(bookings_train[-71], as.factor(bookings_train$is_canceled), trials = 10)
+model5.2 <- C5.0(bookings_train[-3], as.factor(bookings_train$is_canceled), trials = 10)
 predict_m5.2 <- predict(model5.2, bookings_test)
 
 # 4. Model Evaluation: 
-## By improving the model we obtain a 100% accuracy.
+## By improving the model we obtain a 82.33% accuracy.
 confusionMatrix(predict_m5.2, as.factor(bookings_test_labels))
 
 ```
 
 ## 10. Model combination by voting
 ```{r}
-combined <- data.frame(model2, bookings_predictors2, binary.is2, predict_m5.2, bookings_test$is_canceled)
+combined <- data.frame(bookings_predictors, binary.is, predict_m5.2, bookings_test$is_canceled)
 
 #Converting all factors into numeric forms for voting analysis
-model2_f <- as.numeric(model2)
-bookings_predictors2_f <- as.numeric(bookings_predictors2)
-binary.is2_f <- as.numeric(binary.is2)
-predict_m5.2_f <- as.numeric(predict_m5.2)
+bookings_predictors_n <- as.numeric(bookings_predictors2)
+binary.is_n <- as.numeric(binary.is2)
+predict_m5.2_n <- as.numeric(predict_m5.2)
 
-newcombined <- data.frame(model2_f, bookings_predictors2_f, binary.is2_f, predict_m5.2_f, bookings_test$is_canceled)
+newcombined <- data.frame(bookings_predictors_n, binary.is_n, predict_m5.2_n, bookings_test$is_canceled)
 
-newcombined$voting <- ifelse(model2_f + bookings_predictors2_f + binary.is2_f + predict_m5.2_f > 3, 1,0)
+newcombined$voting <- ifelse(bookings_predictors_n + binary.is_n + predict_m5.2_n > 2, 1,0)
 newcombined$voting <- factor(newcombined$voting, levels = c(0,1), labels = c("no","yes"))
 newcombined$bookings_test.is_canceled <- factor(newcombined$bookings_test.is_canceled, levels = c(0,1), labels = c("no","yes"))
 
