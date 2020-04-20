@@ -1,6 +1,6 @@
 ---
-title: "Untitled"
-author: "Jan Láža"
+title: "Bookings Project"
+author: "Group 13"
 date: "4/2/2020"
 output: html_document
 ---
@@ -27,7 +27,6 @@ bookings$stays_in_weekend_nights <- ifelse(is.na(bookings$stays_in_weekend_night
 bookings$stays_in_week_nights <- ifelse(is.na(bookings$stays_in_week_nights),0,bookings$stays_in_week_nights)
 bookings$reserved_room_type <- ifelse(is.na(bookings$reserved_room_type),0,bookings$reserved_room_type)
 bookings$distribution_channel <- ifelse(is.na(bookings$distribution_channel),0,bookings$distribution_channel)
-
 
 
 # 2. Simplyfing the dataset:
@@ -67,21 +66,7 @@ bookings$stays_in_weekend_nights <-ifelse(bookings$stays_in_weekend_nights <=0,"
 
 bookings$stays_in_weekend_nights <- as.factor(bookings$stays_in_weekend_nights)
 
-## G. Grouping adults 
-
-#bookings$adults <- as.character(bookings$adults)
-#bookings$adults <-ifelse(bookings$adults <=0,"0",
-                                    # ifelse(bookings$adults > 0 & bookings$adults <= 1,"1",
-                                      #ifelse(bookings$adults > 1 & bookings$adults <= 2,"2",
-                                            # ifelse(bookings$adults > 2 &bookings$adults <= 3,"3",
-                                                     #ifelse(bookings$adults > 3 & bookings$adults <= 4,"4", 
-                                                            # ifelse(bookings$adults > 4 &bookings$adults <= 5, "5 ", "More than 5 adults"))))))
-
-#bookings$adults <- as.factor(bookings$adults)
-#str(bookings$adults)
-
-                                                                                                                                                          
-## H. Turning the variables children and babys to a 0/1 if they have or not
+## G. Turning the variables children and babys to a 0/1 if they have or not
 #babies
 bookings$babies <- as.character(bookings$babies)
 bookings$babies.s <- ifelse(bookings$babies == "0", "No", "Yes")
@@ -101,24 +86,10 @@ bookings$babies <- NULL
 drops <- c("agent","company", "adr", "reservation_status_date", "assigned_room_type", "market_segment", "arrival_date_year", "arrival_date_day_of_month", "arrival_date_week_number", "arrival_date_month1", "reservation_status", "adults")
 bookings <- bookings[ , !(names(bookings) %in% drops)]
 
-#bookings$agent <- NULL
-#bookings$company <- NULL
-#bookings$adr <- NULL
-#bookings$reservation_status_date <- NULL
-#bookings$assigned_room_type <- NULL
-#bookings$market_segment <- NULL
-#bookings $arrival_date_year <- NULL
-#bookings$arrival_date_day_of_month <- NULL
-#bookings$arrival_date_week_number <- NULL
-#bookings$arrival_date_month1 <- NULL
-#bookings$reservation_status <- NULL 
-#bookings$adults <- NULL
-#summary(bookings$adults)
 
 # 4. Making dummy variables as we have multiple factors
 
 bookings.dummy <- as.data.frame(model.matrix(~ . -1, bookings))
-#str(bookings.dummy)
 ```
 
 # 3. Preaparing data 
@@ -127,7 +98,7 @@ bookings.dummy <- as.data.frame(model.matrix(~ . -1, bookings))
 set.seed(65)
 bookings.dummy <- bookings.dummy[sample(1:nrow(bookings.dummy)),]
 
-bookings.dummy <- bookings.dummy[1:1000,] #instead of 80000
+bookings.dummy <- bookings.dummy[1:1000,]
 
 
 # 2. Normalize the data:
@@ -149,14 +120,8 @@ bookings_test <- subset(bookings.dummy.n, split == FALSE)
 bookings_train_labels <- bookings_train[, 3]
 bookings_test_labels <- bookings_test[, 3]
 
-#bookings_train <- bookings.dummy.n[1:95237,]
-#bookings_test <- bookings.dummy.n[95238:119046,]
 
-#bookings_train_labels <- bookings.dummy.n[1:95237,3]
-#bookings_test_labels <- bookings.dummy.n[95238:119046,3]
-
-
-#3.1. Making sure they have a similar/logic distribution
+# 3.1. Making sure they have a similar/logic distribution
 table(bookings_train_labels)
 table(bookings_test_labels)
 
@@ -167,14 +132,52 @@ table(bookings_test_labels)
 ### Graph 1
 ```{r}
 # Exploring how many bookings are canceled and not  
-plot(as.factor(bookings$is_canceled), main="How often customers cancel their bookings?", ylab="Number of cancelations",  xlab= "Is canceled", ylim = c(0,90000), col=c("green", "red"), legend.text = "0 = No, 1 = Yes", width=20)
+graph1 <- plot(as.factor(bookings$is_canceled), main="How often customers cancel their bookings?", ylab="Number of cancelations",  xlab= "Is canceled", ylim = c(0,90000), col=c("green", "red"), legend.text = "0 = No, 1 = Yes", width=20)
+graph1
 ```
 
 ### Graph 2
 ```{r}
-#Exploring which month is the most popular for hotel visits
-plot(bookings$arrival_date_month, main="Which month is the most popular?", ylab="Number of reservation",  xlab= "Month", las=2, names.arg= c("January", "February", "March", "April", "May", "June", "July", "August", "September","October", "November", "December"), ylim=c(0,15000))
+# Exploring which month is the most popular for hotel visits
+graph2 <- plot(bookings$arrival_date_month, main="Which month is the most popular?", ylab="Number of reservation",  xlab= "Month", las=2, names.arg= c("January", "February", "March", "April", "May", "June", "July", "August", "September","October", "November", "December"), ylim=c(0,15000))
 ```
+
+### Graph 3
+```{r}
+library(ggplot2)
+# Number of cancellations depending on the number of stays in weekend nights
+graph3 <- ggplot(data = bookings[bookings$is_canceled == 1,], aes(stays_in_weekend_nights)) + geom_bar(aes(fill = ..count..)) + theme(axis.text.x = element_text(angle = 0, hjust = 0))
+graph3
+```
+
+### Graph 4
+```{r}
+# Number of cancellations depending on the number of stays in week nights
+graph4 <- ggplot(data = bookings[bookings$is_canceled == 1,], aes(stays_in_week_nights)) + geom_bar(aes(fill = ..count..)) + theme(axis.text.x = element_text(angle = 0, hjust = 0))
+graph4
+```
+
+### Graph 5
+```{r}
+# Exploring the cancellations depending on the lead time
+graph5 <- ggplot(data = bookings[bookings$is_canceled == 1,], aes(lead_time)) + geom_bar(aes(fill = ..count..)) + theme(axis.text.x = element_text(angle = 90, hjust = 0))
+graph5
+```
+
+### Graph 6
+```{r}
+# Exploring the cancellations depending on the hotel
+graph6 <- ggplot(data = bookings[bookings$is_canceled == 1,], aes(hotel)) + geom_bar(aes(fill = ..count..)) + theme(axis.text.x = element_text(angle = 0, hjust = 0))
+graph6
+```
+
+### Graph 7
+```{r}
+# Number of cancellatiions per month
+graph7 <- ggplot(data = bookings[bookings$is_canceled == 1,], aes(arrival_date_month)) + geom_bar(aes(fill = ..count..)) + theme(axis.text.x = element_text(angle = 90, hjust = 0))
+graph7
+```
+
 
 ## 5. Regression model
 ```{r}
@@ -205,6 +208,7 @@ library(caret)
 model1_pred = predict(model1, bookings_test)
 binary = ifelse(model1_pred > 0.5, 1, 0)
 confusionMatrix(as.factor(binary), as.factor(bookings_test_labels))
+## With this model we obtain an accuracy of 80.33%.
 ```
 
 ```{r}
@@ -220,10 +224,10 @@ bookings_test <- clean_names(bookings_test)
 ```{r}
 # 1. Building the Model:
 library(class)
-## Note: we will use k= 34 as it is its square root.
-model2 <- knn(train = bookings_train[ ,-3], test = bookings_test[ ,-3], cl = bookings_train_labels, k = 34)
+model2 <- knn(train = bookings_train[ ,-3], test = bookings_test[ ,-3], cl = bookings_train_labels, k = 35)
 
-# 2. Model Evaluation:
+# 2. Model Evaluation
+## With the KNN Model we obtain an accuracy of 76.67%
 confusionMatrix(as.factor(model2), as.factor(bookings_test_labels))
 ```
 
@@ -238,15 +242,16 @@ summary(model3)
 
 # 2. Model Evaluation:
 bookings_predictors <- predict(model3, bookings_test)
+## With the SVM Model we obtain an accuracy of 80.67%.
 confusionMatrix(bookings_predictors, as.factor(bookings_test_labels))
 
 # 3. Model Improvement:
 ## We will try different kernels in order to see which one has a higher accuracy.
-model3.2 <- ksvm(as.factor(is_canceled)~., data = bookings_train, kernel = "rbfdot")
+model3.2 <- ksvm(as.factor(is_canceled)~., data = bookings_train, kernel = "polydot")
 
 
 # 4. Model Evaluation:
-## By improving the model we can obtain a %.
+## By improving the model we can obtain a 80.67 accuracy%.
 bookings_predictors2 <- predict(model3.2, bookings_test)
 confusionMatrix(bookings_predictors2, as.factor(bookings_test_labels))
 ```
@@ -259,15 +264,18 @@ model4 <- neuralnet(formula = is_canceled ~., data = bookings_train, linear.outp
 model4_results <- compute(model4, bookings_test[,-3])$net.result
 
 # 2. Model Evaluation:
-binary.is <- ifelse(model4_results > 0.4, 1, 0)
+binary.is <- ifelse(model4_results > 0.35, 1, 0)
+## With the ANN Model we obtain an accuracy of 79.67%.
 confusionMatrix(as.factor(binary.is), as.factor(bookings_test$is_canceled))
 
 # 3. Model Improvement
 model4.2 <- neuralnet(formula = is_canceled ~., data = bookings_train, linear.output = FALSE, hidden = 4)
 model4.2_results <- compute(model4.2, bookings_test[,-3])$net.result
+summary(model4.2_results)
 
 # 4. Model Evaluation:
-binary.is2 <- ifelse(model4.2_results > 0.4, 1, 0)
+binary.is2 <- ifelse(model4.2_results > 0.35, 1, 0)
+## By improving the model we obtain a 74.67% accuracy.
 confusionMatrix(as.factor(binary.is2), as.factor(bookings_test$is_canceled))
 ```
 
@@ -279,6 +287,7 @@ model5 <- C5.0(bookings_train[-3], as.factor(bookings_train$is_canceled))
 predict_m5 <- predict(model5, bookings_test)
 
 # 2. Model Evaluation:
+## We obtain a 79.33% accuracy.
 confusionMatrix(predict_m5, as.factor(bookings_test_labels))
 
 # 3. Improving the model:
@@ -287,6 +296,7 @@ model5.2 <- C5.0(bookings_train[-71], as.factor(bookings_train$is_canceled), tri
 predict_m5.2 <- predict(model5.2, bookings_test)
 
 # 4. Model Evaluation: 
+## By improving the model we obtain a 100% accuracy.
 confusionMatrix(predict_m5.2, as.factor(bookings_test_labels))
 
 ```
@@ -309,5 +319,6 @@ newcombined$bookings_test.is_canceled <- factor(newcombined$bookings_test.is_can
 
 agreement_all <- newcombined$voting == newcombined$bookings_test.is_canceled
 str(newcombined)
+confusionMatrix(newcombined$voting, newcombined$bookings_test.is_canceled)
 ```
 
